@@ -1,0 +1,587 @@
+# source: http://localhost:8000/graphql
+# timestamp: Wed Mar 04 2020 08:19:02 GMT+0100 (heure normale d’Europe centrale)
+
+"""A custom connection for queries on book"""
+type BookConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [BookEdge]!
+}
+
+"""A Relay edge containing a `Book` and its cursor."""
+type BookEdge {
+  """The item at the end of the edge"""
+  node: BookType
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""An enumeration."""
+enum BookGenre {
+  """Science Fiction"""
+  SF
+
+  """Theatre"""
+  THEATRE
+
+  """Poésie"""
+  POESIE
+
+  """Nouvelle"""
+  NOUVELLE
+
+  """Bande Dessinée"""
+  BD
+
+  """Manga"""
+  MANGA
+}
+
+"""
+This provides the schema's BookOrderBy Enum type, for oredering BookConnection.
+
+The class name is what the GraphQl scheam Enum type name should be, the
+left-hand side below is what the Enum values should be, and the right-hand side is what our
+resolver will receive.
+"""
+enum BookOrderBy {
+  title_ASC
+  title_DESC
+  writer_ASC
+  writer_DESC
+  genre_ASC
+  genre_DESC
+  publicationDate_ASC
+  publicationDate_DESC
+  owner_ASC
+  owner_DESC
+  creationDate_ASC
+  creationDate_DESC
+}
+
+"""A type for the book"""
+type BookType implements Node {
+  title: String!
+  tags: [String]
+  description: String
+  genre: BookGenre
+  owner: PrivateUserType
+
+  """The ID of the object."""
+  id: ID!
+  writer: [WriterType]
+  pk: String
+  similarBooks: [BookType]
+  reader: [ReaderType]
+}
+
+"""A type for the comment"""
+type CommentType implements Node {
+  message: String!
+  publicationDate: DateTime!
+  owner: PrivateUserType
+  content: BookType!
+  parent: CommentType
+
+  """The ID of the object."""
+  id: ID!
+  pk: String
+}
+
+type CommentTypeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [CommentTypeEdge]!
+}
+
+"""A Relay edge containing a `CommentType` and its cursor."""
+type CommentTypeEdge {
+  """The item at the end of the edge"""
+  node: CommentType
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+input CreateBookMutationInput {
+  title: String!
+  description: String
+  genre: String
+
+  """A comma-separated list of tags."""
+  tags: String
+  writer: [ID]!
+  id: ID
+  clientMutationId: String
+}
+
+"""Mutation for book registration"""
+type CreateBookMutationPayload {
+  book: BookType
+  errors: [ErrorType]
+  clientMutationId: String
+}
+
+input CreateCommentMutationInput {
+  message: String!
+  content: ID!
+  parent: ID!
+  id: ID
+  clientMutationId: String
+}
+
+"""Mutation for comment creation"""
+type CreateCommentMutationPayload {
+  comment: CommentType
+  errors: [ErrorType]
+  clientMutationId: String
+}
+
+type CreateReader {
+  book: BookType
+  user: UserType
+  status: String
+}
+
+type CreateWriter {
+  writer: WriterType
+}
+
+"""
+The `DateTime` scalar type represents a DateTime
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar DateTime
+
+type DeleteReader {
+  ok: Boolean
+  reader: ReaderType
+}
+
+type ErrorType {
+  field: String!
+  messages: [String!]!
+}
+
+"""
+The `GenericScalar` scalar type represents a generic
+GraphQL scalar value that could be:
+String, Boolean, Int, Float, List or Object.
+"""
+scalar GenericScalar
+
+"""
+Have this class inherit your module's Mutation class to add mutations to
+the schem.
+"""
+type Mutation {
+  """Mutation for comment creation"""
+  createComment(input: CreateCommentMutationInput!): CreateCommentMutationPayload
+
+  """Mutation for book registration"""
+  createBook(input: CreateBookMutationInput!): CreateBookMutationPayload
+
+  """Mutation allowing the use to change book"""
+  updateBook(input: UpdateBookMutationInput!): UpdateBookMutationPayload
+  createWriter(link: String, name: String, writerId: String): CreateWriter
+  createReader(bookId: Int, statuts: String): CreateReader
+  deleteReader(id: ID): DeleteReader
+
+  """Mutation for user registration"""
+  createUser(input: RegisterUserMutationInput!): RegisterUserMutationPayload
+
+  """Mutation allowing the current user to set their profile options."""
+  profileSettings(input: ProfileSettingsMutationInput!): ProfileSettingsMutationPayload
+
+  """Mutation allowing the current user to set/change their password"""
+  setPassword(input: SetPasswordMutationInput!): SetPasswordMutationPayload
+
+  """
+  Login mutation provided bu django-grapql-jwt. Subclassed to have it return
+  the logged-in user
+  """
+  tokenAuth(input: ObtainJSONWebTokenInput!): ObtainJSONWebTokenPayload
+
+  """
+  Verify the token mutation provided by django-graphql-jwt, subclassed to return
+  the token's owner
+  """
+  verifyToken(input: VerifyInput!): VerifyPayload
+  refreshToken(input: RefreshInput!): RefreshPayload
+  revokeToken(input: RevokeInput!): RevokePayload
+}
+
+"""An object with an ID"""
+interface Node {
+  """The ID of the object."""
+  id: ID!
+}
+
+input ObtainJSONWebTokenInput {
+  clientMutationId: String
+  email: String!
+  password: String!
+}
+
+"""
+Login mutation provided bu django-grapql-jwt. Subclassed to have it return
+the logged-in user
+"""
+type ObtainJSONWebTokenPayload {
+  token: String
+  user: PrivateUserType
+  clientMutationId: String
+  refreshToken: String
+}
+
+"""
+The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+"""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""
+A type of the "private" representation of a user.
+
+Provides more data that public UserType, meant to be used when
+requesting a user's own account (i.e for the viewer field).
+"""
+type PrivateUserType implements Node {
+  username: String!
+  avatar: String
+  shortDescription: String!
+  tags: [String]
+  locationId: String!
+  location: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  confirmedEmail: Boolean!
+  isStaff: Boolean!
+  isSuperuser: Boolean!
+  dateJoined: DateTime!
+  dateUpdated: DateTime!
+
+  """The ID of the object."""
+  id: ID!
+  pk: String
+  hasPassword: Boolean
+}
+
+input ProfileSettingsMutationInput {
+  shortDescription: String
+  tags: String
+  location: String
+  locationId: String
+  avatar: String
+  email: String
+  firstName: String
+  lastName: String
+  clientMutationId: String
+}
+
+"""Mutation allowing the current user to set their profile options."""
+type ProfileSettingsMutationPayload {
+  shortDescription: String
+  tags: String
+  location: String
+  locationId: String
+  avatar: String
+  email: String
+  firstName: String
+  lastName: String
+  errors: [ErrorType]
+  user: PrivateUserType
+  clientMutationId: String
+}
+
+"""
+The top-level query only exposes Relay's Node and the viewer, other
+queries should be defined as fields on Viewer.
+"""
+type Query {
+  """The ID of the object"""
+  node(id: ID!): Node
+  viewer: Viewer
+}
+
+"""An enumeration."""
+enum ReaderStatus {
+  """Whish List"""
+  WISH
+
+  """Read List"""
+  READ
+
+  """Like List"""
+  LIKE
+}
+
+"""A type for the Reader"""
+type ReaderType implements Node {
+  user: PrivateUserType!
+  book: BookType!
+  status: ReaderStatus!
+
+  """The ID of the object."""
+  id: ID!
+  pk: String
+}
+
+type ReaderTypeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [ReaderTypeEdge]!
+}
+
+"""A Relay edge containing a `ReaderType` and its cursor."""
+type ReaderTypeEdge {
+  """The item at the end of the edge"""
+  node: ReaderType
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+input RefreshInput {
+  refreshToken: String!
+  clientMutationId: String
+}
+
+type RefreshPayload {
+  token: String
+  payload: GenericScalar
+  clientMutationId: String
+  refreshToken: String
+}
+
+input RegisterUserMutationInput {
+  email: String!
+  password: String!
+  id: ID
+  clientMutationId: String
+}
+
+"""Mutation for user registration"""
+type RegisterUserMutationPayload {
+  user: PrivateUserType
+  errors: [ErrorType]
+  clientMutationId: String
+}
+
+input RevokeInput {
+  refreshToken: String!
+  clientMutationId: String
+}
+
+type RevokePayload {
+  revoked: Int
+  clientMutationId: String
+}
+
+input SetPasswordMutationInput {
+  oldPassword: String
+  newPassword: String!
+  clientMutationId: String
+}
+
+"""Mutation allowing the current user to set/change their password"""
+type SetPasswordMutationPayload {
+  oldPassword: String
+  newPassword: String!
+  errors: [ErrorType]
+  user: PrivateUserType
+  clientMutationId: String
+}
+
+"""A custom connection for queries on books tags. """
+type TagsConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [TagsEdge]!
+}
+
+"""A Relay edge containing a `Tags` and its cursor."""
+type TagsEdge {
+  """The item at the end of the edge"""
+  node: TagsType
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""A type for the representation of a tag used by the book model."""
+type TagsType implements Node {
+  name: String!
+  slug: String!
+
+  """The ID of the object."""
+  id: ID!
+  pk: String
+  taggedBooks: Int
+}
+
+input UpdateBookMutationInput {
+  pk: Int!
+  title: String
+  writer: [ID]
+  description: String
+  genre: String
+  tags: String
+  ISBN: String
+  clientMutationId: String
+}
+
+"""Mutation allowing the use to change book"""
+type UpdateBookMutationPayload {
+  pk: Int!
+  title: String
+  writer: [ID]
+  description: String
+  genre: String
+  tags: String
+  ISBN: String
+  errors: [ErrorType]
+  book: BookType
+  clientMutationId: String
+}
+
+"""A custom Connection for queries on User."""
+type UserConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [UserEdge]!
+}
+
+"""A Relay edge containing a `User` and its cursor."""
+type UserEdge {
+  """The item at the end of the edge"""
+  node: UserType
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""
+This provides the schema's UserOrderBy Enum type, for ordering UserConnection.
+
+The class name ('UserOrderBy') is what the GraphQL schema Enum type name should be, the
+left-hand side below is what the Enum values should be, and the right-hand side is what our
+resolver will receive.
+"""
+enum UserOrderBy {
+  firstName_ASC
+  firstName_DESC
+  lastName_ASC
+  lastName_DESC
+  email_ASC
+  email_DESC
+  username_ASC
+  username_DESC
+  dateJoined_ASC
+  dateJoined_DESC
+}
+
+"""A type for the "public" representation of a user"""
+type UserType implements Node {
+  username: String!
+  avatar: String
+  shortDescription: String!
+  tags: [String]
+  locationId: String!
+  location: String!
+  firstName: String!
+  lastName: String!
+
+  """The ID of the object."""
+  id: ID!
+  pk: String
+  similarUsers: [UserType]
+}
+
+input VerifyInput {
+  token: String!
+  clientMutationId: String
+}
+
+"""
+Verify the token mutation provided by django-graphql-jwt, subclassed to return
+the token's owner
+"""
+type VerifyPayload {
+  payload: GenericScalar
+  user: PrivateUserType
+  clientMutationId: String
+}
+
+"""
+The viewer field is used as a root field for all queries (i.e all queries
+are fields of viewer). Have this class inherit the Viewer defined in your
+class to add its field to the schema
+"""
+type Viewer implements Node {
+  """The ID of the object."""
+  id: ID!
+  Comments(before: String, after: String, first: Int, last: Int, publicationDate: DateTime, owner: ID, content: ID): CommentTypeConnection
+
+  """The ID of the object"""
+  writer(id: ID!): WriterType
+  writers(before: String, after: String, first: Int, last: Int, name: String, name_Icontains: String, link: String, link_Icontains: String): WriterTypeConnection
+  Reader(before: String, after: String, first: Int, last: Int, user: ID, book: ID, status: String): ReaderTypeConnection
+  books(orderBy: BookOrderBy, title: String, tags: [String], before: String, after: String, first: Int, last: Int): BookConnection
+  tags(name: String, before: String, after: String, first: Int, last: Int): TagsConnection
+  chatToken: String
+  users(orderBy: UserOrderBy, username: String, tags: [String], before: String, after: String, first: Int, last: Int): UserConnection
+  currentUser: PrivateUserType
+  isLoggedIn: Boolean
+}
+
+"""A type for the writer"""
+type WriterType implements Node {
+  name: String!
+  link: String
+
+  """The ID of the object."""
+  id: ID!
+  pk: String
+}
+
+type WriterTypeConnection {
+  """Pagination data for this connection."""
+  pageInfo: PageInfo!
+
+  """Contains the nodes in this connection."""
+  edges: [WriterTypeEdge]!
+}
+
+"""A Relay edge containing a `WriterType` and its cursor."""
+type WriterTypeEdge {
+  """The item at the end of the edge"""
+  node: WriterType
+
+  """A cursor for use in pagination"""
+  cursor: String!
+}

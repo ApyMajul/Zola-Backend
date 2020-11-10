@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "zola": {
+      "schemaPath": "schema.graphql",
+      "extensions": {
+        "endpoints": {
+          "development": "http://localhost:8000/graphql"
+        }
+      }
+    }
+  }
+}
